@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const auth = require('../../middleware/auth')
 const Product = require('../../models/Product')
 const { check, validationResult } = require('express-validator')
 
 
 
-router.post('/', [
+router.post('/',auth, [
     check('name','Name is required').not().isEmpty(),
     check('price','Price is required').not().isEmpty(),
     check('photo','Photo is required').not().isEmpty()
@@ -67,6 +68,24 @@ router.get('/:id', async (req, res) => {
       res.status(500).send('Server Error');
     }
   });
+  router.delete('/:id', auth, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+
+        if (!product) {
+            return res.status(404).json({ msg: 'Product not found' });
+        }
+        
+        await product.remove();
+        res.json({ msg: 'Product removed' });
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Product not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
   
  
 
